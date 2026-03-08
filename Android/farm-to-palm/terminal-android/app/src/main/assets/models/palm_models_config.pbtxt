@@ -1,0 +1,94 @@
+model_path : "./palm_models_1.2.9.bin"
+compute_configs {
+    model_name: "palm_ae_detection"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_regression"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_ir_liveness"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_kps"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_quality"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_quality_register"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_rgb_liveness"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_rgb_reliability"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_ir_reliability"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+
+compute_configs {
+    model_name: "palm_rgb_register_reliability"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palm_ir_register_reliability"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+
+compute_configs {
+    model_name: "palmprint_ir_recognition@baseline15_exp23_eval151"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}
+compute_configs {
+    model_name: "palmprint_rgb_recognition@baseline11_exp17_eval177"
+    device_type: DeviceArm
+    thread_num: 2
+    cpu_list: 4
+    cpu_list: 5
+}

@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: farmtopalm
+      POSTGRES_PASSWORD: farmtopalm_secret
+      POSTGRES_DB: farmtopalm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U farmtopalm -d farmtopalm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://farmtopalm:farmtopalm_secret@postgres:5432/farmtopalm
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      BIOMETRIC_ENC_KEY: ${BIOMETRIC_ENC_KEY:-32-byte-hex-key-here-xxxxxxxx}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

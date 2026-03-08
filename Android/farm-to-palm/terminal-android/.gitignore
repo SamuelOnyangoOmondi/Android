@@ -1,0 +1,6 @@
+# Vendor SDK artifacts (local only; do not commit jar/so)
+app/libs/*.jar
+app/libs/*.aar
+app/src/main/jniLibs/**/*
+!app/src/main/jniLibs/**/.gitkeep
+!app/src/main/jniLibs/README.md

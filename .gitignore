@@ -1,0 +1,21 @@
+# Dependencies and build outputs
+node_modules/
+**/node_modules/
+**/dist/
+**/.env
+**/.ENV
+!.env.example
+!.ENV.example
+*.log
+.DS_Store
+
+# Android build outputs (large binaries)
+**/app/build/
+**/*.apk
+**/build/
+**/*.bin
+**/*.bin.jar
+**/*.pbz
+**/*.pbz.jar
+**/intermediates/
+**/.gradle/

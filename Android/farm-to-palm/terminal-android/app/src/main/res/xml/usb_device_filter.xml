@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Eyecool ECX166 V: vendor 0x735f = 29535, product 0x6204 = 25092 -->
+    <usb-device vendor-id="29535" product-id="25092" />
+</resources>

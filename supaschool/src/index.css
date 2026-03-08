@@ -1,0 +1,234 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 277 100% 30%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 48 100% 50%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 277 100% 30%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 277 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 277 60% 25%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 277 30% 90%;
+    --sidebar-ring: 277 100% 30%;
+    
+    /* Pastel color variables */
+    --accent-pink: 0 100% 84%;         /* #FFADAD */
+    --accent-peach: 33 100% 82%;       /* #FFD6A5 */
+    --accent-yellow: 62 100% 85%;      /* #FDFFB6 */
+    --accent-green: 120 100% 81%;      /* #CAFFBF */
+    --accent-cyan: 186 100% 81%;       /* #9BF6FF */
+    --accent-blue: 217 100% 81%;       /* #A0C4FF */
+    --accent-purple: 248 100% 85%;     /* #BDB2FF */
+    --accent-lavender: 300 100% 89%;   /* #FFC6FF */
+    --accent-white: 60 100% 99%;       /* #FFFFFC */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 277 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 48 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    
+    --sidebar-background: 277 100% 30%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 277 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 277 75% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 277 50% 20%;
+    --sidebar-ring: 277 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-outfit;
+  }
+}
+
+@layer components {
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-hover hover:-translate-y-1;
+  }
+  
+  .gradient-heading {
+    @apply bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent;
+  }
+  
+  .dashboard-card {
+    @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-soft hover:shadow-hover transition-all duration-300;
+  }
+  
+  .stats-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-soft hover:shadow-hover transition-all;
+  }
+  
+  .tab-button {
+    @apply flex items-center gap-2 px-4 py-3 font-medium rounded-lg transition-all;
+  }
+
+  .clickable {
+    @apply shadow-clickable hover:shadow-hover transition-all duration-300;
+  }
+  
+  .kytabu-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-4;
+  }
+  
+  .kytabu-stat {
+    @apply flex flex-col items-center justify-center;
+  }
+  
+  .kytabu-value {
+    @apply text-2xl font-bold text-primary;
+  }
+  
+  .kytabu-label {
+    @apply text-sm text-gray-500;
+  }
+  
+  .kytabu-sidebar-item {
+    @apply flex items-center gap-3 py-3 px-4 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all;
+  }
+  
+  .kytabu-sidebar-item.active {
+    @apply bg-white/10 text-white;
+  }
+  
+  /* New pastel-themed components */
+  .pastel-card {
+    @apply bg-white dark:bg-gray-800 border border-accent-soft-peach/30 dark:border-accent-soft-lavender/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300;
+  }
+  
+  .pastel-stats-card {
+    @apply border-l-4 rounded-lg shadow-sm hover:shadow-md transition-all;
+  }
+  
+  .pastel-button {
+    @apply rounded-lg transition-all duration-300 shadow-sm hover:shadow-md;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+  
+  .text-shadow {
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .mask-gradient-r {
+    mask-image: linear-gradient(to right, black 70%, transparent 100%);
+  }
+  
+  .mask-gradient-b {
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+  
+  /* Pastel background utilities */
+  .bg-pastel-pink {
+    @apply bg-accent-soft-pink;
+  }
+  
+  .bg-pastel-peach {
+    @apply bg-accent-soft-peach;
+  }
+  
+  .bg-pastel-yellow {
+    @apply bg-accent-soft-yellow;
+  }
+  
+  .bg-pastel-green {
+    @apply bg-accent-soft-green;
+  }
+  
+  .bg-pastel-cyan {
+    @apply bg-accent-soft-cyan;
+  }
+  
+  .bg-pastel-blue {
+    @apply bg-accent-soft-blue;
+  }
+  
+  .bg-pastel-purple {
+    @apply bg-accent-soft-purple;
+  }
+  
+  .bg-pastel-lavender {
+    @apply bg-accent-soft-lavender;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "farm-to-palm-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "migrate": "knex migrate:latest --knexfile knexfile.cjs",
+    "migrate:rollback": "knex migrate:rollback --knexfile knexfile.cjs",
+    "seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.6.1",
+    "fastify": "^4.28.1",
+    "knex": "^3.1.0",
+    "pg": "^8.12.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.10",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.4"
+  }
+}
