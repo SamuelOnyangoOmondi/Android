@@ -23,6 +23,7 @@ import com.farmtopalm.terminal.nfc.NfcManager
 import com.farmtopalm.terminal.nfc.NfcParser
 import com.farmtopalm.terminal.provisioning.ProvisioningManager
 import com.farmtopalm.terminal.sync.ApiClient
+import com.farmtopalm.terminal.sync.SyncRunner
 import com.farmtopalm.terminal.sync.SyncScheduler
 import com.farmtopalm.terminal.ui.components.VendorSdkBanner
 import com.farmtopalm.terminal.util.Logger
@@ -314,6 +315,10 @@ class MainActivity : ComponentActivity() {
                             val unsyncedM = remember { mutableStateOf(0) }
                             var syncStudentsMessage by remember { mutableStateOf<String?>(null) }
                             var syncStudentsLoading by remember { mutableStateOf(false) }
+                            var syncInProgress by remember { mutableStateOf(false) }
+                            var syncProgress by remember { mutableStateOf(0) }
+                            var syncStage by remember { mutableStateOf("") }
+                            var syncCompleted by remember { mutableStateOf<Boolean?>(null) }
                             LaunchedEffect(Unit) {
                                 val (a, m) = withContext(Dispatchers.IO) {
                                     eventRepo.getUnsyncedAttendance().size to eventRepo.getUnsyncedMeals().size
@@ -325,7 +330,30 @@ class MainActivity : ComponentActivity() {
                                 unsyncedAttendance = unsyncedA.value,
                                 unsyncedMeals = unsyncedM.value,
                                 lastSyncTime = c.lastHeartbeatAt,
-                                onSyncNow = { SyncScheduler.runNow(ctx) },
+                                onSyncNow = {
+                                    scope.launch {
+                                        syncInProgress = true
+                                        syncCompleted = null
+                                        syncProgress = 0
+                                        syncStage = ""
+                                        val result = SyncRunner.runSync(ctx) { p, s ->
+                                            withContext(Dispatchers.Main) {
+                                                syncProgress = p
+                                                syncStage = s
+                                            }
+                                        }
+                                        val (a, m) = withContext(Dispatchers.IO) {
+                                            eventRepo.getUnsyncedAttendance().size to eventRepo.getUnsyncedMeals().size
+                                        }
+                                        val cfg = withContext(Dispatchers.IO) { terminalRepo.getConfig() }
+                                        syncInProgress = false
+                                        syncCompleted = result.success
+                                        if (result.error != null) syncStage = result.error!!
+                                        unsyncedA.value = a
+                                        unsyncedM.value = m
+                                        if (cfg != null) config.value = cfg
+                                    }
+                                },
                                 onSyncStudentsFromSupaSchool = {
                                     scope.launch {
                                         syncStudentsLoading = true
@@ -351,6 +379,10 @@ class MainActivity : ComponentActivity() {
                                 },
                                 syncStudentsMessage = syncStudentsMessage,
                                 syncStudentsLoading = syncStudentsLoading,
+                                syncInProgress = syncInProgress,
+                                syncProgress = syncProgress,
+                                syncStage = syncStage,
+                                syncCompleted = syncCompleted,
                                 onRefreshCounts = {
                                     scope.launch {
                                         withContext(Dispatchers.IO) {

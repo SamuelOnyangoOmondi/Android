@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.farmtopalm.terminal.biometric.PalmBiometricManager
+import com.farmtopalm.terminal.biometric.dto.MatchStatus
 import com.farmtopalm.terminal.util.Logger
 import com.farmtopalm.terminal.util.Result
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +73,10 @@ fun MealScreen(
                     scope.launch(Dispatchers.IO) {
                         val id = palmManager.identify(capResult.value)
                         val result = when (id) {
-                            is Result.Success -> MealPalmScanState.Matched(id.value.studentId, id.value.confidence)
+                            is Result.Success -> when (id.value.matchStatus) {
+                                MatchStatus.VERIFIED -> MealPalmScanState.Matched(id.value.studentId, id.value.confidence)
+                                else -> MealPalmScanState.NoMatch
+                            }
                             is Result.Error -> MealPalmScanState.NoMatch
                         }
                         withContext(Dispatchers.Main) {

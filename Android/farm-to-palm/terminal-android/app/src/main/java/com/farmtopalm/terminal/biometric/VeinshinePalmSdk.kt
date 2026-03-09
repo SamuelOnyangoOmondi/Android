@@ -839,17 +839,18 @@ class VeinshinePalmSdk {
         val q = readQuality(raw)
         val meta = getRuntimeMetadata()
 
-        // SDK identify/register result: try common field names for match template ID and score
+        // SDK identify/register result: try common field names for match template ID, score, and hand
         val matchId = readMatchTemplateId(raw)
         val matchScoreVal = readMatchScore(raw)
-        if (matchId != null || matchScoreVal != null) {
-            Logger.d("Veinshine: CaptureFrame recognition result: matchTemplateId=$matchId matchScore=$matchScoreVal")
+        val hand = readHandFromRaw(raw)
+        if (matchId != null || matchScoreVal != null || hand != null) {
+            Logger.d("Veinshine: CaptureFrame recognition result: matchTemplateId=$matchId matchScore=$matchScoreVal hand=$hand")
         }
 
         return if (rgb != null && ir != null) CaptureResult(
             rgbFeature = rgb, irFeature = ir, quality = q,
             streamType = meta.streamType, rgbModelHash = meta.rgbModelHash, irModelHash = meta.irModelHash,
-            matchTemplateId = matchId, matchScore = matchScoreVal
+            matchTemplateId = matchId, matchScore = matchScoreVal, hand = hand
         ) else null
     }
 
@@ -879,6 +880,30 @@ class VeinshinePalmSdk {
                 (f.get(raw) as? Number)?.toFloat()
             } catch (_: Throwable) { null } ?: continue
             if (!v.isNaN()) return v
+        }
+        return null
+    }
+
+    /** Best-effort read of hand side from capture result (e.g. "left", "right") for hand-side enforcement. */
+    private fun readHandFromRaw(raw: Any): String? {
+        val names = listOf("hand", "handSide", "handType", "palmHand", "handSideType")
+        for (name in names) {
+            val v = try {
+                val f = raw.javaClass.getDeclaredField(name)
+                f.isAccessible = true
+                f.get(raw)
+            } catch (_: Throwable) { continue }
+            when (v) {
+                is String -> if (v.isNotBlank()) return v.trim().lowercase()
+                is Number -> {
+                    val s = v.toString()
+                    if (s in listOf("0", "1", "2")) return when (s) { "0" -> "left"; "1" -> "right"; else -> null }
+                }
+                else -> if (v != null) {
+                    val s = v.toString().trim().lowercase()
+                    if (s in listOf("left", "right")) return s
+                }
+            }
         }
         return null
     }

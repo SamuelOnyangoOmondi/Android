@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.farmtopalm.terminal.biometric.PalmBiometricManager
+import com.farmtopalm.terminal.biometric.dto.MatchStatus
 import com.farmtopalm.terminal.util.Logger
 import com.farmtopalm.terminal.util.Result
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +59,10 @@ fun AttendanceScreen(
                     scope.launch(Dispatchers.IO) {
                         val id = palmManager.identify(capResult.value)
                         val result = when (id) {
-                            is Result.Success -> AttendanceScanState.Matched(id.value.studentId, id.value.confidence)
+                            is Result.Success -> when (id.value.matchStatus) {
+                                MatchStatus.VERIFIED -> AttendanceScanState.Matched(id.value.studentId, id.value.confidence)
+                                else -> AttendanceScanState.NoMatch
+                            }
                             is Result.Error -> AttendanceScanState.NoMatch
                         }
                         withContext(Dispatchers.Main) {

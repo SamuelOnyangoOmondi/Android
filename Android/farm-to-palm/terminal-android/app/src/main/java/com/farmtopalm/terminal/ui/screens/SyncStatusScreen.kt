@@ -3,14 +3,8 @@ package com.farmtopalm.terminal.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
-import com.farmtopalm.terminal.sync.SyncScheduler
-import com.farmtopalm.terminal.sync.SyncWorker
 
 @Composable
 fun SyncStatusScreen(
@@ -21,32 +15,26 @@ fun SyncStatusScreen(
     onSyncStudentsFromSupaSchool: () -> Unit,
     syncStudentsMessage: String?,
     syncStudentsLoading: Boolean,
+    syncInProgress: Boolean,
+    syncProgress: Int,
+    syncStage: String,
+    syncCompleted: Boolean?,
     onRefreshCounts: () -> Unit,
     onBack: () -> Unit
 ) {
-    val context = LocalContext.current
-    val workInfos by WorkManager.getInstance(context)
-        .getWorkInfosForUniqueWorkLiveData(SyncScheduler.SYNC_NOW_WORK_NAME)
-        .observeAsState(initial = emptyList())
+    val isSyncing = syncInProgress
+    val syncSucceeded = syncCompleted == true
+    val syncFailed = syncCompleted == false
 
     var showSyncStartedDialog by remember { mutableStateOf(false) }
-    val currentWork = workInfos.firstOrNull()
-    val isSyncing = currentWork?.state == WorkInfo.State.RUNNING
-    val syncSucceeded = currentWork?.state == WorkInfo.State.SUCCEEDED
-    val syncFailed = currentWork?.state == WorkInfo.State.FAILED
 
-    val progress = currentWork?.progress?.getInt(SyncWorker.KEY_PROGRESS, 0) ?: 0
-    val stage = currentWork?.progress?.getString(SyncWorker.KEY_STAGE) ?: ""
-
-    // Refresh counts when sync completes; add delay to ensure DB writes are committed
     LaunchedEffect(syncSucceeded, syncFailed) {
         if (syncSucceeded || syncFailed) {
             onRefreshCounts()
-            kotlinx.coroutines.delay(400)
+            kotlinx.coroutines.delay(300)
             onRefreshCounts()
         }
     }
-    // Periodic refresh while on sync screen so counts stay accurate
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(3000)
@@ -58,11 +46,9 @@ fun SyncStatusScreen(
         AlertDialog(
             onDismissRequest = { showSyncStartedDialog = false },
             title = { Text("Sync started") },
-            text = { Text("Syncing attendance, meals, and palm data in the background. You can watch the progress below.") },
+            text = { Text("Syncing attendance, meals, and palm data.") },
             confirmButton = {
-                TextButton(onClick = { showSyncStartedDialog = false }) {
-                    Text("OK")
-                }
+                TextButton(onClick = { showSyncStartedDialog = false }) { Text("OK") }
             }
         )
     }
@@ -105,20 +91,20 @@ fun SyncStatusScreen(
             ) {
                 Column(Modifier.padding(16.dp)) {
                     if (isSyncing) {
-                        Text(stage.ifBlank { "Syncing…" }, style = MaterialTheme.typography.bodyMedium)
+                        Text(syncStage.ifBlank { "Syncing…" }, style = MaterialTheme.typography.bodyMedium)
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
-                            progress = { progress.toFloat() / 100f },
+                            progress = { syncProgress.toFloat() / 100f },
                             modifier = Modifier.fillMaxWidth().height(8.dp)
                         )
                     } else if (syncSucceeded) {
                         Text("Sync complete", style = MaterialTheme.typography.bodyMedium)
                     } else if (syncFailed) {
                         Column {
-                            Text("Sync failed. Will retry automatically.", style = MaterialTheme.typography.bodyMedium)
-                            if (stage.isNotBlank() && stage != "Sync had errors") {
+                            Text("Sync failed.", style = MaterialTheme.typography.bodyMedium)
+                            if (syncStage.isNotBlank() && syncStage != "Sync had errors") {
                                 Spacer(Modifier.height(4.dp))
-                                Text(stage, style = MaterialTheme.typography.bodySmall)
+                                Text(syncStage, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
