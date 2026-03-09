@@ -6,7 +6,7 @@
     "dev": "npx tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate": "node scripts/check-db-env.mjs && knex migrate:latest --knexfile knexfile.cjs",
+    "migrate": "knex migrate:latest --knexfile knexfile.cjs",
     "migrate:rollback": "knex migrate:rollback --knexfile knexfile.cjs",
     "seed": "tsx src/seed.ts"
   },
