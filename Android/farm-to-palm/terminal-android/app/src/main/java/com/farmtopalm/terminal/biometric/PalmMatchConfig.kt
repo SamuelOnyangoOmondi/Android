@@ -5,8 +5,8 @@ package com.farmtopalm.terminal.biometric
  * Stricter values reduce false positives at the cost of more false rejections.
  */
 data class PalmMatchConfig(
-    /** Minimum score to accept as VERIFIED match (0–1). Default 0.80. */
-    val minAcceptScore: Float = 0.80f,
+    /** Minimum score to accept as VERIFIED match (0–1). Default 0.72 (relaxed for guided enrollment; raise to 0.80 after tuning). */
+    val minAcceptScore: Float = 0.72f,
     /** Minimum quality score (0–100) to allow matching; reject low-quality scans. Default 0 (disabled). */
     val minQualityScore: Int = 0,
     /** Minimum margin between top-1 and top-2 scores; reject ambiguous matches. Default 0.05. */

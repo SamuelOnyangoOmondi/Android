@@ -109,8 +109,9 @@ object PalmSdkBridge {
 
     /**
      * Capture for enrollment asynchronously.
+     * @param onHint Optional callback for live SDK hints during capture (e.g. "Move hand up").
      */
-    fun captureForEnrollAsync(scope: CoroutineScope, hand: String, onResult: (CaptureResult?) -> Unit) {
+    fun captureForEnrollAsync(scope: CoroutineScope, hand: String, onHint: ((String) -> Unit)? = null, onResult: (CaptureResult?) -> Unit) {
         lastError = null
         if (!isUsingRealSdk) {
             lastError = "Vendor SDK not installed"
@@ -123,7 +124,7 @@ object PalmSdkBridge {
             return
         }
         scope.launch(Dispatchers.IO) {
-            val result = veinshine.captureOnceForEnroll(hand)
+            val result = veinshine.captureOnceForEnroll(hand, onHint)
             withContext(Dispatchers.Main) {
                 if (result != null) Logger.d("Capture success (vendor): rgbBytes=${result.rgbFeature?.size ?: 0}, irBytes=${result.irFeature?.size ?: 0}, quality=${result.quality}")
                 else lastError = veinshine.lastError

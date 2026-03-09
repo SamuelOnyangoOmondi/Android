@@ -14,6 +14,12 @@ import com.farmtopalm.terminal.biometric.PalmBiometricManager
 import com.farmtopalm.terminal.biometric.PalmSdkBridge
 import com.farmtopalm.terminal.data.db.entities.StudentEntity
 import com.farmtopalm.terminal.util.Result
+import com.farmtopalm.terminal.ui.components.PalmZoneState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +49,7 @@ fun EnrollmentScreen(
     var status by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     var openReady by remember { mutableStateOf(false) }
+    var guidedState by remember { mutableStateOf<GuidedEnrollmentState?>(null) }
     val scope = rememberCoroutineScope()
 
     if (!adminPinVerified) {
@@ -214,43 +221,100 @@ fun EnrollmentScreen(
                 }
             }
         }
+        if (guidedState != null) {
+            Spacer(Modifier.height(12.dp))
+            GuidedEnrollmentOverlay(
+                state = guidedState!!,
+                hand = hand,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         Spacer(Modifier.height(16.dp))
         Button(
             onClick = {
                 val student = selectedStudent
                 if (student == null || !openReady || loading) return@Button
                 loading = true
-                status = "Capturing..."
-                palmManager.captureForEnroll(scope, hand) { capResult ->
-                    when (capResult) {
-                        is Result.Success -> {
-                            val rgb = capResult.value.rgbFeature ?: ByteArray(0)
-                            val ir = capResult.value.irFeature ?: ByteArray(0)
-                            val v = capResult.value
-                            onSaveTemplate(
-                                student.externalId,
-                                student.name,
-                                hand,
-                                rgb,
-                                ir,
-                                v.quality,
-                                v.streamType,
-                                v.rgbModelHash,
-                                v.irModelHash,
-                                v.matchTemplateId
-                            ) {
-                                status = if (PalmSdkBridge.isUsingRealSdk) "Saved (vendor template)" else "Saved"
-                                loading = false
-                                selectedStudent = null
+                guidedState = GuidedEnrollmentState(currentStep = 0, isCapturing = true)
+                scope.launch(Dispatchers.Main) {
+                    var best: GuidedCapture? = null
+                    for (step in 0 until GUIDED_CAPTURE_COUNT) {
+                        guidedState = guidedState!!.copy(
+                            currentStep = step,
+                            isCapturing = true,
+                            liveHint = null,
+                            error = null
+                        )
+                        val result = suspendCancellableCoroutine<Result<com.farmtopalm.terminal.biometric.dto.CaptureResult>> { cont ->
+                            palmManager.captureForEnroll(scope, hand, { hint ->
+                                guidedState = guidedState?.copy(liveHint = hint) ?: guidedState
+                            }) { capResult ->
+                                cont.resume(capResult)
                             }
                         }
-                        is Result.Error -> {
-                            val msg = (capResult as Result.Error).message
-                            status = "Capture failed: $msg"
-                            if (msg.contains("TIMEOUT", ignoreCase = true) || msg.contains("no palm", ignoreCase = true)) {
-                                status += "\nTip: Hold palm 2-4 cm above sensor, avoid shadows."
+                        when (result) {
+                            is Result.Success -> {
+                                val v = result.value
+                                val rgb = v.rgbFeature ?: ByteArray(0)
+                                val ir = v.irFeature ?: rgb
+                                val q = v.quality
+                                val capture = GuidedCapture(
+                                    rgb, ir, q,
+                                    v.streamType, v.rgbModelHash, v.irModelHash, v.matchTemplateId
+                                )
+                                if (q >= GUIDED_ENROLL_MIN_QUALITY) {
+                                    if (best == null || q > best!!.quality) best = capture
+                                    val newZones = guidedState!!.zoneStates.toMutableMap()
+                                    newZones[step] = if (q >= 75) PalmZoneState.GOOD else PalmZoneState.WEAK
+                                    guidedState = guidedState!!.copy(
+                                        zoneStates = newZones,
+                                        bestCapture = best,
+                                        isCapturing = false,
+                                        error = null
+                                    )
+                                } else {
+                                    guidedState = guidedState!!.copy(
+                                        isCapturing = false,
+                                        error = "Quality $q% too low. Retrying..."
+                                    )
+                                    if (best == null) best = capture
+                                }
                             }
-                            loading = false
+                            is Result.Error -> {
+                                val msg = (result as Result.Error).message
+                                guidedState = guidedState!!.copy(
+                                    isCapturing = false,
+                                    error = msg
+                                )
+                            }
+                        }
+                        if (step < GUIDED_CAPTURE_COUNT - 1) {
+                            kotlinx.coroutines.delay(800)
+                        }
+                    }
+                    withContext(Dispatchers.Main) {
+                        loading = false
+                        guidedState = null
+                        val finalBest = best
+                        if (finalBest != null && finalBest.quality >= GUIDED_ENROLL_MIN_QUALITY) {
+                            onSaveTemplate(
+                                student!!.externalId,
+                                student!!.name,
+                                hand,
+                                finalBest.rgb,
+                                finalBest.ir,
+                                finalBest.quality,
+                                finalBest.streamType,
+                                finalBest.rgbModelHash,
+                                finalBest.irModelHash,
+                                finalBest.sdkTemplateId
+                            ) {
+                                status = if (PalmSdkBridge.isUsingRealSdk) "Saved (quality ${finalBest.quality}%)" else "Saved"
+                                selectedStudent = null
+                            }
+                        } else {
+                            status = finalBest?.let { "Quality too low (${it.quality}%). Hold palm 2–4 cm above sensor, good lighting." }
+                                ?: "Capture failed. Hold palm 2–4 cm above sensor, good lighting."
                         }
                     }
                 }
@@ -263,7 +327,13 @@ fun EnrollmentScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text(if (selectedStudent != null) "Capture & Save palm for ${selectedStudent!!.name}" else "Select a student first")
+            Text(
+                when {
+                    loading -> "Guided capture…"
+                    selectedStudent != null -> "Capture & Save palm for ${selectedStudent!!.name}"
+                    else -> "Select a student first"
+                }
+            )
         }
         Spacer(Modifier.height(8.dp))
         TextButton(

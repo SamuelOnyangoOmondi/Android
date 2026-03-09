@@ -77,13 +77,13 @@ class PalmBiometricManagerImpl(
         lastError = lastError ?: PalmSdkBridge.lastError
     )
 
-    override fun captureForEnroll(scope: CoroutineScope, hand: String, callback: (Result<CaptureResult>) -> Unit) {
+    override fun captureForEnroll(scope: CoroutineScope, hand: String, callback: (Result<CaptureResult>) -> Unit, onHint: ((String) -> Unit)?) {
         if (!initialized || !deviceOpen) {
             callback(Result.Error("Device not ready", null))
             return
         }
         lastError = null
-        PalmSdkBridge.captureForEnrollAsync(scope, hand) { capture ->
+        PalmSdkBridge.captureForEnrollAsync(scope, hand, onHint) { capture ->
             if (capture != null) {
                 callback(Result.Success(capture))
             } else {

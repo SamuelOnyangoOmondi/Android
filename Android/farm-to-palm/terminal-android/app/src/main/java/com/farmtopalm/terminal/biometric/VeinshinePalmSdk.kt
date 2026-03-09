@@ -501,15 +501,15 @@ class VeinshinePalmSdk {
         gotFirstFrame.set(false)
     }
 
-    suspend fun captureOnceForEnroll(hand: String): CaptureResult? = withContext(Dispatchers.IO) {
-        captureOnce(RECOG_MODE_REGISTER, "enroll")
+    suspend fun captureOnceForEnroll(hand: String, onHint: ((String) -> Unit)? = null): CaptureResult? = withContext(Dispatchers.IO) {
+        captureOnce(RECOG_MODE_REGISTER, "enroll", onHint)
     }
 
     suspend fun captureOnceForIdentify(): CaptureResult? = withContext(Dispatchers.IO) {
         captureOnce(RECOG_MODE_IDENTIFY, "identify")
     }
 
-    private suspend fun captureOnce(recogMode: Int, logLabel: String): CaptureResult? {
+    private suspend fun captureOnce(recogMode: Int, logLabel: String, onHint: ((String) -> Unit)? = null): CaptureResult? {
         if (!captureInProgress.compareAndSet(false, true)) {
             lastError = "Capture already in progress"
             Logger.d("PalmCapture: Already capturing; ignoring")
@@ -613,6 +613,9 @@ class VeinshinePalmSdk {
                             lastHintTimeMs.set(now)
                         }
                         lastCaptureHintRef.set(hintStr)
+                        onHint?.let { cb ->
+                            Handler(Looper.getMainLooper()).post { cb(hintStr) }
+                        }
                     }
                     if (mName.lowercase().contains("error")) {
                         Logger.e("PalmCapture: ERROR code=${args?.getOrNull(0)} msg=${args?.getOrNull(1)} thread=$threadName")
