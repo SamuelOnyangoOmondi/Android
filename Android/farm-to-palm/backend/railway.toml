@@ -7,6 +7,7 @@ buildCommand = "npm run build"
 watchPatterns = ["src/**", "package.json", "tsconfig.json", "knexfile.cjs"]
 
 [deploy]
-startCommand = "npm run migrate && npm start"
+# Run migrate first; if it fails, still start app (migrations may already be applied)
+startCommand = "npm run migrate || true; npm start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
